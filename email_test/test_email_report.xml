@@ -1,0 +1,110 @@
+<testset xmlns="http://cpee.org/ns/properties/2.0">
+  <handlerwrapper>DefaultHandlerWrapper</handlerwrapper>
+  <handlers>
+    <handler url="https://centurio.work/customers/evva/report/">
+      <events topic='activity'>calling,failed,manipulating,done</events>
+      <events topic='dataelements'>change</events>
+      <events topic='state'>change</events>
+    </handler>
+  </handlers>
+  <dataelements>
+    <count>1</count>
+  </dataelements>
+  <endpoints>
+    <timeout>http://gruppe.wst.univie.ac.at/~mangler/services/timeout.php</timeout>
+    <report>https://centurio.work/customers/evva/galwass/report/email_test/</report>
+  </endpoints>
+  <attributes>
+    <info>test_email_report</info>
+    <creator>Mathias Hoellerer</creator>
+    <author>Mathias Hoellerer</author>
+    <modeltype>CPEE</modeltype>
+    <theme>default</theme>
+    <status>model</status>
+    <report>https://centurio.work/customers/evva/galwass/report/email_test/report.html</report>
+    <report_email>{"to": "mathias.hoeller@univie.ac.at", "subject": "test process", "text": "https://centurio.work/customers/evva/galwass/report/email_test/email.html"}</report_email>
+    <design_dir/>
+    <design_stage>draft</design_stage>
+    <report_group>test_report</report_group>
+  </attributes>
+  <description>
+    <description xmlns="http://cpee.org/ns/description/1.0">
+      <call id="a1" endpoint="timeout">
+        <parameters>
+          <label>timeout 1</label>
+          <method>:post</method>
+          <arguments>
+            <timeout>2</timeout>
+          </arguments>
+          <stream>
+            <sensors/>
+            <aggregators/>
+            <costs/>
+          </stream>
+          <report>
+            <url>!endpoints.report + 'timeout.html'</url>
+          </report>
+        </parameters>
+        <annotations>
+          <_timing>
+            <_timing_wait/>
+            <_timing_threshold/>
+            <_timing_min/>
+            <_timing_max/>
+            <_timing_avg/>
+          </_timing>
+          <_notes>
+            <_notes_general/>
+          </_notes>
+        </annotations>
+      </call>
+      <loop mode="pre_test" condition="data.count &lt; 10">
+        <_probability>
+          <_probability_min/>
+          <_probability_max/>
+          <_probability_avg/>
+        </_probability>
+        <call id="a2" endpoint="timeout">
+          <parameters>
+            <label>timeout 2 loop</label>
+            <method>:post</method>
+            <arguments>
+              <timeout>1</timeout>
+            </arguments>
+            <stream>
+              <sensors/>
+              <aggregators/>
+              <costs/>
+            </stream>
+            <report>
+              <url/>
+            </report>
+          </parameters>
+          <code>
+            <prepare/>
+            <finalize output="result">data.count += 1</finalize>
+            <update output="result"/>
+            <rescue output="result"/>
+          </code>
+          <annotations>
+            <_timing>
+              <_timing_wait/>
+              <_timing_threshold/>
+              <_timing_min/>
+              <_timing_max/>
+              <_timing_avg/>
+            </_timing>
+            <_notes>
+              <_notes_general/>
+            </_notes>
+          </annotations>
+        </call>
+      </loop>
+    </description>
+  </description>
+  <transformation>
+    <description type="copy"/>
+    <dataelements type="none"/>
+    <endpoints type="none"/>
+  </transformation>
+</testset>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Report Server
+After=network.target
+
+[Service]
+Type=forking
+User=centurio
+WorkingDirectory=/home/centurio/Projects/customers-evva/galwass/report
+ExecStart=/home/centurio/Projects/customers-evva/galwass/report/report.rb restart
+TimeoutStopSec=30
+Restart=always
+RestartSec=3
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

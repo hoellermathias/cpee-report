@@ -1,0 +1,26 @@
+<description datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes" xmlns="http://riddl.org/ns/description/1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <message name="list">
+    <parameter name="list" mimetype="text/html"/>
+  </message>
+  <message name="report">
+    <parameter name="report" mimetype="text/html"/>
+  </message>
+  <message name="report-pdf">
+    <parameter name="report-pdf" mimetype="application/pdf"/>
+  </message>
+  <resource>
+    <get out="list"/>
+    <resource relative="\w+">
+      <get out="list"/>
+      <resource relative="[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}">
+        <delete/>
+        <resource relative="report.html">
+          <get out="report"/>
+        </resource>
+        <resource relative="report.pdf">
+          <get out="report-pdf"/>
+        </resource>
+      </resource>
+    </resource>
+  </resource>
+</description>

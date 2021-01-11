@@ -1,0 +1,22 @@
+<declaration xmlns="http://riddl.org/ns/declaration/1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <interface name="events">
+    <xi:include href="http://www.riddl.org/ns/common-patterns/notifications-consumer/2.0/consumer.xml"/>
+  </interface>
+  <interface name="delivery">
+    <xi:include href="delivery.xml"/>
+  </interface>
+
+  <facade>
+    <tile>
+      <layer name="events">
+        <apply-to>/events</apply-to>
+      </layer>
+    </tile>
+    <tile>
+      <layer name="delivery">
+        <apply-to>/report</apply-to>
+      </layer>
+    </tile>
+  </facade>
+</declaration>
