@@ -134,7 +134,7 @@ end #}}}
 class GetUuids < Riddl::Implementation #{{{
   def response
     opts = @a[0]
-    list = Dir.children(File.join(opts[:report_dir], @r)).map { |e|
+    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.map { |e|
       id = File.join(opts[:report_dir], @r, e)
       %{<tr>
         <td>#{e}</td>
@@ -188,7 +188,7 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
   cross_site_xhr true
 
   opts[:report_dir] ||= 'reports'
-  opts[:report_url] ||= 'https://centurio.work/customers/evva/reportservice/report/'
+  opts[:report_url] ||= 'https://centurio.evva.com/departments/galvanik/reportservice/report/'
   opts[:mail_server] ||= 'http://localhost:9313'
 
   interface 'events' do
