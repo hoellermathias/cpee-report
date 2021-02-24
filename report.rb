@@ -56,7 +56,7 @@ class Handler < Riddl::Implementation #{{{
     instance_id = nots['instance-uuid']
     report = @@reports[instance_id]
     unless report
-      return unless @p[1].value == 'state' && @p[2].value == 'change' && nots.dig('content','state') == 'running' && nots.dig('content','attributes','report')
+      return unless @p[1].value == 'state' && @p[2].value == 'change' && nots.dig('content','state') == 'running' && (nots.dig('content','attributes','report') || nots.dig('content','attributes','report_csv'))
       begin
         attribute_uri = File.join(nots['instance-url'],'properties','attributes','report')
         template_uri = Typhoeus.get(attribute_uri, followlocation: true).response_body
@@ -74,13 +74,21 @@ class Handler < Riddl::Implementation #{{{
       group = nots.dig('content','attributes','report_group') || 'default'
       report = @@reports[instance_id] = Report.new group, opts, instance_id, template
       #read init snippet and add it to the report
+      init_snippet_uri = nots.dig('content','attributes','report_init_snippet')
       begin
-        init_snippet_uri = nots.dig('content','attributes','report_init_snippet')
         init_snippet = Typhoeus.get(init_snippet_uri, followlocation: true).response_body
         report.add_snippet init_snippet, Event.new
       rescue Exception => e
         puts 'error loading the init_snippet: ' + e.full_message
-      end
+      end if init_snippet_uri
+      #read csv template and add it to the report
+      csv_uri = nots.dig('content','attributes','report_csv')
+      begin
+        csv = Typhoeus.get(csv_uri, followlocation: true).response_body
+        report.add_csv csv, Event.new
+      rescue Exception => e
+        puts 'error loading the csv template: ' + e.full_message
+      end if csv_uri
     end
     return unless report
     event = Event.new @p[1].value, @p[2].value, nots  #report.add_event params

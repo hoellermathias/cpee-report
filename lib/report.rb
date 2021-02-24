@@ -29,6 +29,14 @@ class Report
     report.gsub! '</body>', "<snippet>#{event.activity_uuid}</snippet>\n</body>"
     File.write(File.join(@dirname,'report.html'), report)
   end
+  def add_csv csv, event
+    csv.scan(/%(\w*:\w+:[\w+|:]*)%/).each do |match|
+      FileUtils.touch(File.join(@dirname,'events',"#{match.first}-#{csv}"))
+    end
+    @csv_str = csv.strip.split("\n").last
+    File.write(File.join(@dirname,'report.csv'),csv.strip.split("\n")[0..-2].join("\n"))
+    @csv_temp = @csv_str
+  end
   def event_done event
     #event is part of a snippet
     events =  Dir.glob(File.join(@dirname,'events',event.name + '*'))
@@ -37,19 +45,34 @@ class Report
       puts e
       event_elem_id, snippet = e.split('/').last.split('-')
       event_elem = event_elem_id.split(':')
-      snippet_path = File.join(@dirname,'snippets',snippet)
-      File.open(snippet_path, File::RDWR) do |f|
-        f.flock(File::LOCK_EX)
-        f_cont = f.read
-        const_part = /<const>((.|\s)*)<\/const>/.match(f_cont)&.captures&.first
-        @const_snippets[snippet_path] = const_part if const_part && !@const_snippets.include?(snippet_path)
-        snippet_content = f_cont.gsub "%#{event_elem_id}%", event.get_data_s(event_elem[3..-1]).to_s
-        f.rewind
-        f.write(snippet_content)
-        f.flush
-        f.truncate(f.pos)
-        File.delete(e) unless const_part
-        finalize_snippet(snippet, snippet_content, snippet_path) unless Dir.glob(File.join(@dirname,'events', "/*-#{snippet}")).any?
+      if snippet == 'csv'
+        add_str=''
+        begin 
+          add_str << @csv_str 
+          @csv_str = @csv_temp
+        unless @csv_str.includes? event_elem_id 
+        @csv_str.gsub "%#{event_elem_id}%", event.get_data_s(event_elem[3..-1]).to_s
+        begin 
+          add_str << @csv_str 
+          @csv_str = @csv_temp
+        if /%(\w*:\w+:[\w+|:]*)%/.match(@csv_str)  
+        snippet_path = File.join(@dirname,snippet)
+        File.open(snippet_path, "a"){|f| f.write("\n#{@csv_str}")} unless add_str.empty?
+      else
+        snippet_path = File.join(@dirname,'snippets',snippet)
+        File.open(snippet_path, File::RDWR) do |f|
+          f.flock(File::LOCK_EX)
+          f_cont = f.read
+          const_part = /<const>((.|\s)*)<\/const>/.match(f_cont)&.captures&.first
+          @const_snippets[snippet_path] = const_part if const_part && !@const_snippets.include?(snippet_path)
+          snippet_content = f_cont.gsub "%#{event_elem_id}%", event.get_data_s(event_elem[3..-1]).to_s
+          f.rewind
+          f.write(snippet_content)
+          f.flush
+          f.truncate(f.pos)
+          File.delete(e) unless const_part
+          finalize_snippet(snippet, snippet_content, snippet_path) unless Dir.glob(File.join(@dirname,'events', "/*-#{snippet}")).any?
+        end
       end
     end
     @const_snippets.each do |path, content|
@@ -77,6 +100,10 @@ class Report
       f.flush
       f.truncate(f.pos)
     end
+  end
+  def finalize_csv
+    snippet_path = File.join(@dirname,snippet)
+    File.open(snippet_path, "a"){|f| f.write("\n#{@csv_str}")} if @csv_str != @csv_temp
   end
   def finalize
     snippets = File.join(@dirname,'snippets')
