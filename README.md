@@ -94,7 +94,7 @@ Das oben angeführte HTML ist bei der Aktivität mit der ID: a2 verlinkt.
 
 `%:activity:calling:timestamp%` wird mit dem Zeitpunkt, an dem der Service aufgerufen wird, ersetzt.
 
-`%a3:dataelements:change:imagelink%`: A3 ruft den Mitarbeiterservice auf und retuniert einen Link zu dem in der Datenbank hinterlegten Bild des Mitarbeiters (`"www.daslebenisteinponnyhof.org/mitarbeiter/12345/image"`). Dieser wird in das HTML eingefügt. Somit steht im HTML Report `<img src="www.daslebenisteinponnyhof.org/mitarbeiter/12345/image"/>` und das Bild wird im Report dynamisch geladen. Aus diesem Grund ist es wichtig, dass der Link beim Aufruf des Berichtes erreichbar ist. Für das Umwandeln in ein PDF muss der Link auch vom Report Service aufgerufen werden können.
+`%a3:dataelements:change:imagelink%`: A3 ruft den Mitarbeiterservice auf und retuniert einen Link zu dem in der Datenbank hinterlegten Bild des Mitarbeiters (`"www.daslebenisteinponyhof.org/mitarbeiter/12345/image"`). Dieser wird in das HTML eingefügt. Somit steht im HTML Report `<img src="www.daslebenisteinponnyhof.org/mitarbeiter/12345/image"/>` und das Bild wird im Report dynamisch geladen. Aus diesem Grund ist es wichtig, dass der Link beim Aufruf des Berichtes erreichbar ist. Für das Umwandeln in ein PDF muss der Link auch vom Report Service aufgerufen werden können.
 
 Das HTML Stück nach dem erfolgreichen Aufruf von A2 und A3:
 ```
