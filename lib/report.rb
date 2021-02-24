@@ -31,11 +31,11 @@ class Report
   end
   def add_csv csv, event
     csv.scan(/%(\w*:\w+:[\w+|:]*)%/).each do |match|
-      FileUtils.touch(File.join(@dirname,'events',"#{match.first}-#{csv}"))
+      FileUtils.touch(File.join(@dirname,'events',"#{match.first}-csv"))
     end
     @csv_str = csv.strip.split("\n").last
     File.write(File.join(@dirname,'report.csv'),csv.strip.split("\n")[0..-2].join("\n"))
-    @csv_temp = @csv_str
+    @csv_temp = @csv_str.dup
   end
   def event_done event
     #event is part of a snippet
@@ -47,17 +47,20 @@ class Report
       event_elem = event_elem_id.split(':')
       if snippet == 'csv'
         add_str=''
-        begin 
-          add_str << @csv_str 
-          @csv_str = @csv_temp
-        unless @csv_str.includes? event_elem_id 
-        @csv_str.gsub "%#{event_elem_id}%", event.get_data_s(event_elem[3..-1]).to_s
-        begin 
-          add_str << @csv_str 
-          @csv_str = @csv_temp
-        if /%(\w*:\w+:[\w+|:]*)%/.match(@csv_str)  
-        snippet_path = File.join(@dirname,snippet)
-        File.open(snippet_path, "a"){|f| f.write("\n#{@csv_str}")} unless add_str.empty?
+        begin
+          add_str << "\n#{@csv_str}"
+          @csv_str = @csv_temp.dup
+        end unless @csv_str.include? event_elem_id
+        @csv_str.gsub! "%#{event_elem_id}%", event.get_data_s(event_elem[3..-1]).to_s
+        begin
+          add_str << "\n#{@csv_str}"
+          @csv_str = @csv_temp.dup
+        end unless /%(\w*:\w+:[\w+|:]*)%/.match(@csv_str)
+        snippet_path = File.join(@dirname,'report.csv')
+        puts add_str
+        puts @csv_str
+        puts @csv_temp
+        File.open(snippet_path, "a"){|f| f.write("#{add_str}")} unless add_str.empty?
       else
         snippet_path = File.join(@dirname,'snippets',snippet)
         File.open(snippet_path, File::RDWR) do |f|
