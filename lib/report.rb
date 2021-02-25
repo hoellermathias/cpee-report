@@ -40,6 +40,9 @@ class Report
   def event_done event
     #event is part of a snippet
     events =  Dir.glob(File.join(@dirname,'events',event.name + '*'))
+    events += Dir.glob(File.join(@dirname,'events',event.name.gsub(/a\d+:/,':') + '*'))
+    p event.name.gsub(/a\d+:/,':')
+    p events
     return unless events
     events.each do |e|
       puts e
@@ -57,9 +60,9 @@ class Report
           @csv_str = @csv_temp.dup
         end unless /%(\w*:\w+:[\w+|:]*)%/.match(@csv_str)
         snippet_path = File.join(@dirname,'report.csv')
-        puts add_str
-        puts @csv_str
-        puts @csv_temp
+        #puts add_str
+        #puts @csv_str
+        #puts @csv_temp
         File.open(snippet_path, "a"){|f| f.write("#{add_str}")} unless add_str.empty?
       else
         snippet_path = File.join(@dirname,'snippets',snippet)
@@ -105,7 +108,7 @@ class Report
     end
   end
   def finalize_csv
-    snippet_path = File.join(@dirname,snippet)
+    snippet_path = File.join(@dirname,'report.csv')
     File.open(snippet_path, "a"){|f| f.write("\n#{@csv_str}")} if @csv_str != @csv_temp
   end
   def finalize
@@ -118,6 +121,7 @@ class Report
     end
     FileUtils.remove_dir snippets
     FileUtils.remove_dir events
+    finalize_csv
   end
   def send_email report_url, a
     a['subject'] += Time.new.tap{|x| str=x.strftime('%d.%m.%Y %H:%M:%S'); day=['Sonntag', 'Montag','Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'][x.strftime('%w').to_i]; break "#{day}, #{str}"}
