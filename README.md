@@ -95,38 +95,39 @@ Das oben angeführte HTML ist bei der Aktivität mit der ID: a2 verlinkt.
 
 `%:activity:calling:timestamp%` wird mit dem Zeitpunkt, an dem der Service aufgerufen wird, ersetzt.
 
-`%a3:dataelements:change:imagelink%`: A3 ruft den Mitarbeiterservice auf und retuniert einen Link zu dem in der Datenbank hinterlegten Bild des Mitarbeiters (`"www.daslebenisteinponyhof.org/mitarbeiter/12345/image"`). Dieser wird in das HTML eingefügt. Somit steht im HTML Report `<img src="www.daslebenisteinponnyhof.org/mitarbeiter/12345/image"/>` und das Bild wird im Report dynamisch geladen. Aus diesem Grund ist es wichtig, dass der Link beim Aufruf des Berichtes erreichbar ist. Für das Umwandeln in ein PDF muss der Link auch vom Report Service aufgerufen werden können.
+`%a3:dataelements:change:imagelink%`: A3 ruft den Mitarbeiterservice auf und retuniert einen Link zu dem in der Datenbank hinterlegten Bild des Mitarbeiters (`"www.daslebenisteinponyhof.org/mitarbeiter/12345/image"`). Dieser wird in das HTML eingefügt. Somit steht im HTML Report `<img src="www.daslebenisteinponyhof.org/mitarbeiter/12345/image"/>` und das Bild wird im Report dynamisch geladen. Aus diesem Grund ist es wichtig, dass der Link beim Aufruf des Berichtes erreichbar ist. Für das Umwandeln in ein PDF muss der Link auch vom Report Service aufgerufen werden können.
 
 Das HTML Stück nach dem erfolgreichen Aufruf von A2 und A3:
 ```
 <div>
   <p>Nachname: Hoeller</p>
   <p>Aufgerufen am 11.11.2020 um 11:11</p>
-  <img src="www.daslebenisteinponnyhof.org/mitarbeiter/12345/image"/>
+  <img src="www.daslebenisteinponyhof.org/mitarbeiter/12345/image"/>
 </div>
 ```
 
 ##### CSV Report
-Der CSV Report kann verwendet werden um Datenelemente über die Zeit des Prozesses mitzuschreiben. 
-**Dazu ein kleines Beispiel:**
-Der Prozess initalisiert zwei Datenelemente am Anfang: ´text´ und ´i´. Beide Datenelemente werden danach in einer Schleife sekündlich verändert und in den CSV Report aufgenommen. 
-    Das Attribut ´report_csv´ beinhaltet einen Link auf die Vorlage mit dem folgenden Inhalt: 
+Der CSV Report kann verwendet werden um Datenelemente über die Zeit des Prozesses mitzuschreiben.  
+**Dazu ein kleines Beispiel:**  
+![Prozessmodel](./email_test/csv_test_process.png)  
+Der Prozess initialisiert zwei Datenelemente am Anfang: `text` und `i`. Beide Datenelemente werden danach in einer Schleife sekündlich verändert und in den CSV Report aufgenommen. 
+Das Attribut `report_csv` beinhaltet einen Link auf die Vorlage mit dem folgenden Inhalt: 
 
 ```
 ahhhh, test, wann
 %:dataelements:change:i%,%:dataelements:change:text%, %:dataelements:change:timestamp%
 ```
-Bei jeder Änderung eines Datenelements werden die Annotations (%...%) mit den entsprechenden Datenelementen ´i´ und ´test´ ersetzt weiters wird bei jeder Änderung ein Zeitspempel gespeichert (%:dataelements:change:timestamp%). Eine neue Zeile wird immer hinzugefügt, wenn entweder alle Annotations ersetzt werden (keine %....% mehr vorhanden) oder die ensprechende Annotations bereits ersetzt wurde. Foglende Sitatuion würde zum hinzufügen einer neuen Zeile führen: 
- - letzte Zeile im CSV: 15,%:dataelements:change:text%, %:dataelements:change:timestamp%
- - Es wird ein Event empfangen über die Änderung der Datenelemente ´i´ und ´text´.
- - Begonnen wird mit dem aufschreiben von ´i´.
- - Da die Stelle an der die Änderung von ´i´ in der aktuellen Zeile schon ersetzt ist wird eine neue Zeile hinzugefügt.
- - Danach werden das Datenelement ´text´ und der Zeitpunkt ersetzt.
+Bei jeder Änderung eines Datenelements werden die Annotations (%...%) mit den entsprechenden Datenelementen `i` und `test` ersetzt weiters wird bei jeder Änderung ein Zeitspempel gespeichert (%:dataelements:change:timestamp%). Eine neue Zeile wird immer hinzugefügt, wenn entweder alle Annotations ersetzt werden (keine %....% mehr vorhanden) oder die ensprechende Annotation bereits ersetzt wurde. Foglende Sitatuion würde zum hinzufügen einer neuen Zeile führen: 
+ - letzte Zeile im CSV: `15,%:dataelements:change:text%, %:dataelements:change:timestamp%`
+ - Es wird ein Event empfangen über die Änderung der Datenelemente `i` und `text`.
+ - Begonnen wird mit dem Aufschreiben von `i`.
+ - Da die Stelle an der die Änderung von `i` in der aktuellen Zeile schon ersetzt ist wird eine neue Zeile hinzugefügt.
+ - Danach werden das Datenelement `text` und der Zeitpunkt in der neu hinzugefügten Zeile ersetzt. Die alte Zeile wird mit den Annotations in den Report aufgenommen.
 
-**Tip**: Am einfachsten lässt sich die oben erläuterte Problematik verhindern, indem ein Datenelement mit den ensprechenden Informationen getrackt wird. Das könnte wie folgt aussehen: 
-- CSV Zeile: ´%:dataelements:change:dat:i%,%:dataelements:change:dat:text%, %:dataelements:change:dat:time%´
-- Das Datemelement wird an einer stelle im Prozess geändert und der Zeitpunkt im Datenelement gespeichert.
-  ´dat: {i: 10, text: 'das wird im csv notiert', time: Time.now} 
+**Tip**: Am einfachsten lässt sich die oben erläuterte Problematik verhindern, indem ein Datenelement, mit den ensprechenden Informationen, getrackt wird. Das könnte wie folgt aussehen: 
+- CSV Zeile: `%:dataelements:change:dat:i%,%:dataelements:change:dat:text%, %:dataelements:change:dat:time%`
+- Das Datemelement `dat` wird an einer Stelle im Prozess geändert und der Zeitpunkt im Datenelement gespeichert.
+  `dat: {i: 10, text: 'das wird im csv notiert', time: Time.now}`
 
 
 ##### Const Annotation für Schleifen 
