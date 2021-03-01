@@ -144,10 +144,14 @@ class GetUuids < Riddl::Implementation #{{{
     opts = @a[0]
     list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.map { |e|
       id = File.join(opts[:report_dir], @r, e)
+      csv = File.join(@r, e, 'report.csv')
+      html = File.join(@r, e, 'report.html')
+      csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
       %{<tr>
         <td>#{e}</td>
-        <td><a href=\"#{File.join(@r, e, 'report.html')}\">HTML</a></td>
+        <td><a href=\"#{html}\">HTML</a></td>
         <td><a href=\"#{File.join(@r, e, 'report.pdf')}\">PDF</a></td>
+        <td>#{csv_exists && '<a href='+csv+'>CSV</a>' || '<p>---</p>'}</td>
         <td>#{File.mtime(id)}</td>
        </tr>
       }
@@ -163,6 +167,7 @@ class GetUuids < Riddl::Implementation #{{{
           <th>Process Instance Id</th>
           <th>HTML</th>
           <th>PDF</th>
+          <th>CSV</th>
           <th>TIME</th>
         </tr>
       </thead>
@@ -170,6 +175,14 @@ class GetUuids < Riddl::Implementation #{{{
 
     list.push('</tbody></body>')
     Riddl::Parameter::Complex.new('list', 'text/html', list.join(''))
+  end
+end #}}}
+
+class GetCSV < Riddl::Implementation #{{{
+  def response
+    opts = @a[0]
+    report_path = File.join(opts[:report_dir], @r)
+    Riddl::Parameter::Complex.new('report-csv', 'text/csv', File.read(report_path))
   end
 end #}}}
 
@@ -214,6 +227,9 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
         end
         on resource 'report.pdf' do
           run GetPdf, opts if get
+        end
+        on resource 'report.csv' do
+          run GetCSV, opts if get
         end
       end
     end

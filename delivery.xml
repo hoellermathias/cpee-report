@@ -8,6 +8,9 @@
   <message name="report-pdf">
     <parameter name="report-pdf" mimetype="application/pdf"/>
   </message>
+  <message name="report-csv">
+    <parameter name="report-csv" mimetype="text/csv"/>
+  </message>
   <resource>
     <get out="list"/>
     <resource relative="\w+">
@@ -19,6 +22,9 @@
         </resource>
         <resource relative="report.pdf">
           <get out="report-pdf"/>
+        </resource>
+        <resource relative="report.csv">
+          <get out="report-csv"/>
         </resource>
       </resource>
     </resource>
