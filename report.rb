@@ -144,8 +144,8 @@ class GetUuids < Riddl::Implementation #{{{
     opts = @a[0]
     list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.map { |e|
       id = File.join(opts[:report_dir], @r, e)
-      csv = File.join(@r, e, 'report.csv')
-      html = File.join(@r, e, 'report.html')
+      csv = File.join('..', @r, e, 'report.csv')
+      html = File.join('..', @r, e, 'report.html')
       csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
       %{<tr>
         <td>#{e}</td>

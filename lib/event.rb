@@ -24,9 +24,9 @@ class Event
     else
       case @topic
       when 'dataelements'
-          @nots.dig('content', 'values', *d_name.map{|x| (Integer x rescue nil) || x.to_s }) || 'not found'
+          @nots.dig('content', 'values', *d_name.map{|x| (Integer x rescue nil) || x.to_s }) || '--'
       else
-        @nots.dig(*d_name.map(&:to_s)) || @nots.dig(*d_name.unshift('content').map(&:to_s)) || 'not found'
+        @nots.dig(*d_name.map(&:to_s)) || @nots.dig(*d_name.unshift('content').map(&:to_s)) || '--'
       end
     end
   end
