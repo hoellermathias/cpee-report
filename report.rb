@@ -21,6 +21,7 @@ require 'json'
 require 'riddl/server'
 require 'time'
 require 'pdfkit'
+require 'zip'
 require_relative 'lib/report'
 require_relative 'lib/event'
 
@@ -142,15 +143,16 @@ end #}}}
 class GetUuids < Riddl::Implementation #{{{
   def response
     opts = @a[0]
-    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.map { |e|
+    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.filter_map { |e|
       id = File.join(opts[:report_dir], @r, e)
+      next unless File.directory? id
       csv = File.join('..', @r, e, 'report.csv')
       html = File.join('..', @r, e, 'report.html')
       csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
       %{<tr>
         <td>#{e}</td>
         <td><a href=\"#{html}\">HTML</a></td>
-        <td><a href=\"#{File.join(@r, e, 'report.pdf')}\">PDF</a></td>
+        <td><a href=\"#{File.join('..', @r, e, 'report.pdf')}\">PDF</a></td>
         <td>#{csv_exists && '<a href='+csv+'>CSV</a>' || '<p>---</p>'}</td>
         <td>#{File.mtime(id)}</td>
        </tr>
@@ -173,7 +175,7 @@ class GetUuids < Riddl::Implementation #{{{
       </thead>
       <tbody>})
 
-    list.push('</tbody></body>')
+    list.push('<p><a href="reports.zip">Download all PDFs as Zip</a></p></tbody></body>')
     Riddl::Parameter::Complex.new('list', 'text/html', list.join(''))
   end
 end #}}}
@@ -204,6 +206,28 @@ class GetPdf < Riddl::Implementation
   end
 end
 
+class GetPdfZip < Riddl::Implementation
+  def response
+    opts = @a[0]
+    zn = File.join(opts[:report_dir], @r[0..-2], 'reports.zip')
+    File.delete zn if File.exist? zn
+    file = Zip::File.new(zn, true)
+    Dir.glob(File.join(opts[:report_dir], @r[0..-2], '*/report.pdf')).map do |x|
+      date = File.mtime(x).then{|x| x.strftime('%d-%m-%Y_%H:%M')}
+      name = "#{date}.pdf"
+      it = 1
+      while file.find_entry name do
+        name = "#{date}_#{it}.pdf"
+        it += 1
+      end
+      file.add(name, x)
+    end
+    file.close
+    z = File.open(zn)
+    Riddl::Parameter::Complex.new('report-zip', 'application/zip', z)
+  end
+end
+
 Riddl::Server.new('report.xml', :port => 9321) do |opts|
   accessible_description true
   cross_site_xhr true
@@ -220,6 +244,9 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
     run GetNames, opts if get
     on resource '\w+' do
       run GetUuids, opts if get
+      on resource 'reports.zip' do
+        run GetPdfZip, opts if get
+      end
       on resource '[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}' do
         run Delete if delete
         on resource 'report.html' do

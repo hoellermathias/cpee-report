@@ -11,10 +11,16 @@
   <message name="report-csv">
     <parameter name="report-csv" mimetype="text/csv"/>
   </message>
+  <message name="report-zip">
+    <parameter name="report-zip" mimetype="application/zip"/>
+  </message>
   <resource>
     <get out="list"/>
     <resource relative="\w+">
       <get out="list"/>
+      <resource relative="reports.zip">
+        <get out="report-zip"/>
+      </resource>
       <resource relative="[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}">
         <delete/>
         <resource relative="report.html">
