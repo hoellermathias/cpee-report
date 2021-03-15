@@ -17,7 +17,7 @@ class Report
   end
   def add_snippet snippet, event
     snippet.scan(/%(\w*:\w+:[\w+|:]*)%/).each do |match|
-      if match.first[0] == ':'
+      if match.first[0] == ':' && event.activity_id
         new_event_str = event.activity_id.to_s + match.first
         snippet.gsub! "%#{match.first}%", "%#{new_event_str}%"
         match[0] = new_event_str
@@ -34,7 +34,8 @@ class Report
       FileUtils.touch(File.join(@dirname,'events',"#{match.first}-csv"))
     end
     @csv_str = csv.strip.split("\n").last
-    File.write(File.join(@dirname,'report.csv'),csv.strip.split("\n")[0..-2].join("\n"))
+    csv_fn = File.join(@dirname,'report.csv')
+    File.write(csv_fn ,csv.strip.split("\n")[0..-2].join("\n")) unless File.exists?(csv_fn)
     @csv_temp = @csv_str.dup
   end
   def event_done event
@@ -48,6 +49,9 @@ class Report
       puts e
       event_elem_id, snippet = e.split('/').last.split('-')
       event_elem = event_elem_id.split(':')
+      p 'event relevant?'
+      p event.is_relevant? event_elem[3..-1]
+      next unless event.is_relevant? event_elem[3..-1]
       if snippet == 'csv'
         add_str=''
         begin

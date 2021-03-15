@@ -79,6 +79,7 @@ class Handler < Riddl::Implementation #{{{
       begin
         init_snippet = Typhoeus.get(init_snippet_uri, followlocation: true).response_body
         report.add_snippet init_snippet, Event.new
+        pp init_snippet
       rescue Exception => e
         puts 'error loading the init_snippet: ' + e.full_message
       end if init_snippet_uri

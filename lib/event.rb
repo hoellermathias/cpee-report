@@ -4,7 +4,7 @@ require 'date'
 class Event
   attr_reader :topic, :event, :activity_uuid, :activity_id
 
-  def initialize(topic='nil', event='nil', nots={'content' =>{'activity-uuid' => 'init_snippet', 'activity' => 'please_put_an_activity_id_here', 'timestamp' => Time.now}})
+  def initialize(topic='nil', event='nil', nots={'content' =>{'activity-uuid' => 'init_snippet', 'activity' => nil, 'timestamp' => Time.now}})
     @topic         = topic
     @event         = event
     @nots          = nots
@@ -29,5 +29,10 @@ class Event
         @nots.dig(*d_name.map(&:to_s)) || @nots.dig(*d_name.unshift('content').map(&:to_s)) || '--'
       end
     end
+  end
+  #check if dataelements change event is relevant (this event changed the dataelement)
+  def is_relevant? d_name
+    return !!@nots.dig('content', 'changed')&.include?(d_name.first) if @topic == 'dataelements' && d_name.first != 'timestamp'
+    true
   end
 end
