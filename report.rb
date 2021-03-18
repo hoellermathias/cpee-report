@@ -185,7 +185,7 @@ class GetCSV < Riddl::Implementation #{{{
   def response
     opts = @a[0]
     report_path = File.join(opts[:report_dir], @r)
-    Riddl::Parameter::Complex.new('report-csv', 'text/csv', File.read(report_path))
+    Riddl::Parameter::Complex.new('report-csv', 'text/csv', File.read(report_path), "#{@r[1]}.csv")
   end
 end #}}}
 
@@ -203,7 +203,7 @@ class GetPdf < Riddl::Implementation
     report_path = File.join(opts[:report_dir], @r)
     kit = PDFKit.new(File.new(report_path[0..-5]+'.html'), :margin_top => '0.5in', :margin_bottom => '0.5in')
     file = kit.to_file(report_path)
-    Riddl::Parameter::Complex.new('report-pdf', 'application/pdf', file)
+    Riddl::Parameter::Complex.new('report-pdf', 'application/pdf', file, "#{@r[1]}.pdf")
   end
 end
 
