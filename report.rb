@@ -25,6 +25,16 @@ require 'zip'
 require_relative 'lib/report'
 require_relative 'lib/event'
 
+module PDFprint
+  def PDFprint.prepare_html_print report_path
+    puts 'here we go'
+    tempf = report_path+'.html'
+    File.write(tempf, File.read(report_path[0..-5]+'.html').gsub(/%(\w*:\w+:[\w+|:]*)%/, ''))
+    kit = PDFKit.new(File.new(tempf), :margin_top => '0.5in', :margin_bottom => '0.5in')
+    kit.to_file(report_path)
+  end
+end
+
 class Handler < Riddl::Implementation #{{{
   @@reports = {}
   def response
@@ -111,8 +121,7 @@ class Handler < Riddl::Implementation #{{{
           a = JSON.parse(attribute)
           a['text'] = Typhoeus.get(a['text'], followlocation: true).tap{|r| break r.response_code == 200 ? r.response_body : 'Predefinied Email Content not found. \n%link_to_report%'} if a['text'] =~ URI::regexp
           report_path = File.join(__dir__ ,opts[:report_dir], report.group, report.id, 'report.pdf')
-          kit = PDFKit.new(File.new(report_path[0..-5]+'.html'), :margin_top => '0.5in', :margin_bottom => '0.5in')
-          file = kit.to_file(report_path)
+          PDFprint.prepare_html_print report_path
           report.send_email_attachment report_path, a
         end
       rescue Exception => e
@@ -201,8 +210,7 @@ class GetPdf < Riddl::Implementation
   def response
     opts = @a[0]
     report_path = File.join(opts[:report_dir], @r)
-    kit = PDFKit.new(File.new(report_path[0..-5]+'.html'), :margin_top => '0.5in', :margin_bottom => '0.5in')
-    file = kit.to_file(report_path)
+    file = PDFprint.prepare_html_print report_path
     Riddl::Parameter::Complex.new('report-pdf', 'application/pdf', file, "#{@r[1]}.pdf")
   end
 end
