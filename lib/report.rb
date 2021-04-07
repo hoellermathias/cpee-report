@@ -16,6 +16,7 @@ class Report
     File.write(rname,template) unless File.exist?(rname)
   end
   def add_snippet snippet, event
+    return if File.exists?(File.join(@dirname,'snippets',event.activity_uuid))
     snippet.scan(/%(\w*:\w+:[\w+|:]*)%/).each do |match|
       if match.first[0] == ':' && event.activity_id
         new_event_str = event.activity_id.to_s + match.first
@@ -162,6 +163,18 @@ class Report
     Content-Disposition: attachment; filename = "#{fn}"
 
     #{encoded_content}
+    EOS #if pdf
+
+    #a['subject'] += <<~EOS
+    #Content-Type: application/pdf; name = "#{fn}"
+    #Content-Transfer-Encoding:base64
+    #Content-Disposition: attachment; filename = "#{fn}"
+
+    ##{encoded_content}
+    #EOS #if csv
+
+
+    a['subject'] += <<~EOS
     --#{marker}--
     EOS
 
