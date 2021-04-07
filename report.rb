@@ -67,7 +67,7 @@ class Handler < Riddl::Implementation #{{{
     instance_id = nots['instance-uuid']
     report = @@reports[instance_id]
     unless report
-      return unless @p[1].value == 'state' && @p[2].value == 'change' && nots.dig('content','state') == 'running' && (nots.dig('content','attributes','report') || nots.dig('content','attributes','report_csv'))
+      return unless (@p[1].value == 'state' && @p[2].value == 'change' && nots.dig('content','state') == 'running' && (nots.dig('content','attributes','report') || nots.dig('content','attributes','report_csv'))) || Dir.glob(File.join(__dir__ ,opts[:report_dir], '*', instance_id)).any?
       begin
         attribute_uri = File.join(nots['instance-url'],'properties','attributes','report')
         template_uri = Typhoeus.get(attribute_uri, followlocation: true).response_body
@@ -93,6 +93,7 @@ class Handler < Riddl::Implementation #{{{
       rescue Exception => e
         puts 'error loading the init_snippet: ' + e.full_message
       end if init_snippet_uri
+
       #read csv template and add it to the report
       csv_uri = nots.dig('content','attributes','report_csv')
       begin
@@ -113,6 +114,8 @@ class Handler < Riddl::Implementation #{{{
       report.event_done event
     elsif event.topic == 'state' and event.event == 'change' and nots.dig('content', 'state') == 'finished'
       report.finalize
+      report_path = File.join(__dir__ ,opts[:report_dir], report.group, report.id, 'report.pdf')
+      PDFprint.prepare_html_print report_path
       @@reports.delete report.id
       begin
         attribute_uri = File.join(nots["instance-url"],'properties','attributes','report_email','/')
@@ -120,8 +123,6 @@ class Handler < Riddl::Implementation #{{{
         unless attribute.empty? then
           a = JSON.parse(attribute)
           a['text'] = Typhoeus.get(a['text'], followlocation: true).tap{|r| break r.response_code == 200 ? r.response_body : 'Predefinied Email Content not found. \n%link_to_report%'} if a['text'] =~ URI::regexp
-          report_path = File.join(__dir__ ,opts[:report_dir], report.group, report.id, 'report.pdf')
-          PDFprint.prepare_html_print report_path
           report.send_email_attachment report_path, a
         end
       rescue Exception => e
@@ -153,18 +154,19 @@ end #}}}
 class GetUuids < Riddl::Implementation #{{{
   def response
     opts = @a[0]
-    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.join(opts[:report_dir], @r, x) ) }.filter_map { |e|
+    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.exists?(File.join(opts[:report_dir], @r, x, 'report.html')) ? File.join(opts[:report_dir], @r, x, 'report.html') : File.join(opts[:report_dir], @r, x)) }.filter_map { |e|
       id = File.join(opts[:report_dir], @r, e)
       next unless File.directory? id
       csv = File.join('..', @r, e, 'report.csv')
       html = File.join('..', @r, e, 'report.html')
+      next unless File.exist?(File.join(opts[:report_dir], @r, e, 'report.html'))
       csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
       %{<tr>
         <td>#{e}</td>
         <td><a href=\"#{html}\">HTML</a></td>
         <td><a href=\"#{File.join('..', @r, e, 'report.pdf')}\">PDF</a></td>
         <td>#{csv_exists && '<a href='+csv+'>CSV</a>' || '<p>---</p>'}</td>
-        <td>#{File.mtime(id)}</td>
+        <td>#{File.mtime(File.join(id, 'report.html'))}</td>
        </tr>
       }
     }
@@ -222,7 +224,7 @@ class GetPdfZip < Riddl::Implementation
     File.delete zn if File.exist? zn
     file = Zip::File.new(zn, true)
     Dir.glob(File.join(opts[:report_dir], @r[0..-2], '*/report.pdf')).map do |x|
-      date = File.mtime(x).then{|x| x.strftime('%d-%m-%Y_%H:%M')}
+      date = File.mtime(x.gsub('.pdf', '.html')).then{|x| x.strftime('%Y-%m-%d_%H:%M')}
       name = "#{date}.pdf"
       it = 1
       while file.find_entry name do
