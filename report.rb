@@ -27,7 +27,6 @@ require_relative 'lib/event'
 
 module PDFprint
   def PDFprint.prepare_html_print report_path
-    puts 'here we go'
     tempf = report_path+'.html'
     File.write(tempf, File.read(report_path[0..-5]+'.html').gsub(/%(\w*:\w+:[\w+|:]*)%/, ''))
     kit = PDFKit.new(File.new(tempf), :margin_top => '0.5in', :margin_bottom => '0.5in')
@@ -154,22 +153,27 @@ end #}}}
 class GetUuids < Riddl::Implementation #{{{
   def response
     opts = @a[0]
-    list = Dir.children(File.join(opts[:report_dir], @r)).sort_by { |x| File.mtime(File.exists?(File.join(opts[:report_dir], @r, x, 'report.html')) ? File.join(opts[:report_dir], @r, x, 'report.html') : File.join(opts[:report_dir], @r, x)) }.filter_map { |e|
-      id = File.join(opts[:report_dir], @r, e)
-      next unless File.directory? id
-      csv = File.join('..', @r, e, 'report.csv')
-      html = File.join('..', @r, e, 'report.html')
-      next unless File.exist?(File.join(opts[:report_dir], @r, e, 'report.html'))
-      csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
-      %{<tr>
-        <td>#{e}</td>
-        <td><a href=\"#{html}\">HTML</a></td>
-        <td><a href=\"#{File.join('..', @r, e, 'report.pdf')}\">PDF</a></td>
-        <td>#{csv_exists && '<a href='+csv+'>CSV</a>' || '<p>---</p>'}</td>
-        <td>#{File.mtime(File.join(id, 'report.html'))}</td>
-       </tr>
-      }
-    }
+    list = Dir.children(File.join(opts[:report_dir], @r))
+              .sort_by { |x| File.mtime(File.exists?(File.join(opts[:report_dir], @r, x, 'report.json')) ? File.join(opts[:report_dir], @r, x, 'report.json') : File.exists?(File.join(opts[:report_dir], @r, x, 'report.html')) ? File.join(opts[:report_dir], @r, x, 'report.html') : File.join(opts[:report_dir], @r, x)) }
+              .filter_map { |e|
+                id = File.join(opts[:report_dir], @r, e)
+                next unless File.directory? id
+                csv = File.join('..', @r, e, 'report.csv')
+                html = File.join('..', @r, e, 'report.html')
+                info = File.join('..', @r, e, 'report.json')
+                next unless File.exist?(File.join(opts[:report_dir], @r, e, 'report.html'))
+                csv_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.csv'))
+                info_exists = File.exist?(File.join(opts[:report_dir], @r, e, 'report.json'))
+                %{<tr>
+                  <td>#{e}</td>
+                  <td><a href=\"#{html}\">HTML</a></td>
+                  <td><a href=\"#{File.join('..', @r, e, 'report.pdf')}\">PDF</a></td>
+                  <td>#{csv_exists && '<a href='+csv+'>CSV</a>' || '<p>---</p>'}</td>
+                  <td>#{info_exists && '<a href='+info+'>INFO</a>' || '<p>---</p>'}</td>
+                  <td>#{File.mtime(File.join(id, info_exists ? 'report.json' : 'report.html'))}</td>
+                 </tr>
+                }
+              }
     list.unshift(%{
     <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -182,6 +186,7 @@ class GetUuids < Riddl::Implementation #{{{
           <th>HTML</th>
           <th>PDF</th>
           <th>CSV</th>
+          <th>INFO</th>
           <th>TIME</th>
         </tr>
       </thead>
@@ -189,6 +194,14 @@ class GetUuids < Riddl::Implementation #{{{
 
     list.push('<p><a href="reports.zip">Download all CSVs and PDFs as Zip</a></p></tbody></body>')
     Riddl::Parameter::Complex.new('list', 'text/html', list.join(''))
+  end
+end #}}}
+
+class GetINFO < Riddl::Implementation #{{{
+  def response
+    opts = @a[0]
+    report_path = File.join(opts[:report_dir], @r)
+    Riddl::Parameter::Complex.new('report-info', 'application/json', File.read(report_path), "#{@r[1]}.json")
   end
 end #}}}
 
@@ -270,6 +283,9 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
         end
         on resource 'report.csv' do
           run GetCSV, opts if get
+        end
+        on resource 'report.json' do
+          run GetINFO, opts if get
         end
       end
     end

@@ -23,7 +23,7 @@ class Archive
       tstr = time.strftime('%Y-%m-%d_%H:%M')
       m = time.to_date.month
       y = time.to_date.year
-      [html, pdf, csv].each{|f| move_file(File.join(@path, f), m, y, tstr)}
+      [html, pdf, csv, json].each{|f| move_file(File.join(@path, f), m, y, tstr)}
     end
   end
   def move_file file, m, y, tstr

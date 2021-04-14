@@ -11,6 +11,9 @@
   <message name="report-csv">
     <parameter name="report-csv" mimetype="text/csv"/>
   </message>
+  <message name="report-info">
+    <parameter name="report-info" mimetype="application/json"/>
+  </message>
   <message name="report-zip">
     <parameter name="report-zip" mimetype="application/zip"/>
   </message>
@@ -31,6 +34,9 @@
         </resource>
         <resource relative="report.csv">
           <get out="report-csv"/>
+        </resource>
+        <resource relative="report.json">
+          <get out="report-info"/>
         </resource>
       </resource>
     </resource>
