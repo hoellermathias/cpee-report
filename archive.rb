@@ -35,6 +35,6 @@ class Archive
    Dir.mkdir y_path unless Dir.exist? y_path
    Dir.mkdir m_path unless Dir.exist? m_path
    Dir.mkdir ext_path unless Dir.exist? ext_path
-   FileUtils.cp(file, File.join(ext_path, "#{tstr}.#{ext}"))
+   FileUtils.cp(file, File.join(ext_path, "#{tstr}_Report_#{@report_group}_#{file.split('/')[-2]}.#{ext}"))
   end
 end

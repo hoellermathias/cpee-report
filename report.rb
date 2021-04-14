@@ -83,7 +83,7 @@ class Handler < Riddl::Implementation #{{{
         template = '<p>error while loading the report template: check the instance attribute \"report\"</p><body></body>'
       end
       group = nots.dig('content','attributes','report_group') || 'default'
-      report = @@reports[instance_id] = Report.new group, opts, instance_id, template
+      report = @@reports[instance_id] = Report.new group, opts, instance_id, template, nots
       #read init snippet and add it to the report
       init_snippet_uri = nots.dig('content','attributes','report_init_snippet')
       begin
@@ -187,7 +187,7 @@ class GetUuids < Riddl::Implementation #{{{
       </thead>
       <tbody>})
 
-    list.push('<p><a href="reports.zip">Download all PDFs as Zip</a></p></tbody></body>')
+    list.push('<p><a href="reports.zip">Download all CSVs and PDFs as Zip</a></p></tbody></body>')
     Riddl::Parameter::Complex.new('list', 'text/html', list.join(''))
   end
 end #}}}
@@ -223,15 +223,17 @@ class GetPdfZip < Riddl::Implementation
     zn = File.join(opts[:report_dir], @r[0..-2], 'reports.zip')
     File.delete zn if File.exist? zn
     file = Zip::File.new(zn, true)
-    Dir.glob(File.join(opts[:report_dir], @r[0..-2], '*/report.pdf')).map do |x|
-      date = File.mtime(x.gsub('.pdf', '.html')).then{|x| x.strftime('%Y-%m-%d_%H:%M')}
-      name = "#{date}.pdf"
-      it = 1
-      while file.find_entry name do
-        name = "#{date}_#{it}.pdf"
-        it += 1
+    ['pdf', 'csv'].each do |ext|
+      Dir.glob(File.join(opts[:report_dir], @r[0..-2], "*/report.#{ext}")).map do |x|
+        date = File.mtime(x.gsub(".#{ext}", '.html')).then{|x| x.strftime('%Y-%m-%d_%H:%M')}
+        name = "#{ext}/#{date}.#{ext}"
+        it = 1
+        while file.find_entry name do
+          name = "#{date}_#{it}.#{ext}"
+          it += 1
+        end
+        file.add(name, x)
       end
-      file.add(name, x)
     end
     file.close
     z = File.open(zn)

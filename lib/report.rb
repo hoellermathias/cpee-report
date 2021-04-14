@@ -3,7 +3,7 @@ require_relative 'event'
 
 class Report
   attr_accessor :group, :id
-  def initialize group, opts, fname, template=nil
+  def initialize group, opts, fname, template=nil, nots
     @const_snippets={}
     @opts = opts
     @group = group
@@ -14,6 +14,7 @@ class Report
 
     rname = File.join(@dirname,'report.html')
     File.write(rname,template) unless File.exist?(rname)
+    File.write(rname.gsub('.html', '.json'),JSON.pretty_generate(nots)) unless File.exist?(rname.gsub('.html', '.json'))
   end
   def add_snippet snippet, event
     return if File.exists?(File.join(@dirname,'snippets',event.activity_uuid))
