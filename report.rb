@@ -24,6 +24,7 @@ require 'pdfkit'
 require 'zip'
 require_relative 'lib/report'
 require_relative 'lib/event'
+require_relative 'lib/archive'
 
 module PDFprint
   def PDFprint.prepare_html_print report_path
@@ -179,6 +180,8 @@ class GetUuids < Riddl::Implementation #{{{
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     </head>
     <body>
+    <p><a href="reports.zip">Download all CSVs and PDFs as Zip</a></p>
+    <p><a href="archive">Archive Reports</a></p>
     <table>
       <thead>
         <tr>
@@ -192,7 +195,7 @@ class GetUuids < Riddl::Implementation #{{{
       </thead>
       <tbody>})
 
-    list.push('<p><a href="reports.zip">Download all CSVs and PDFs as Zip</a></p></tbody></body>')
+    list.push('</tbody></table></body>')
     Riddl::Parameter::Complex.new('list', 'text/html', list.join(''))
   end
 end #}}}
@@ -230,6 +233,16 @@ class GetPdf < Riddl::Implementation
   end
 end
 
+class RunArchive < Riddl::Implementation
+  def response
+    opts = @a[0]
+    archive = ReportArchive.new File.join(opts[:basepath], opts[:report_dir]), @r[0], opts[:archive_dir]
+    archive.run
+    @headers << Riddl::Header.new("Location",'..')
+    @status = 303
+  end
+end
+
 class GetPdfZip < Riddl::Implementation
   def response
     opts = @a[0]
@@ -261,6 +274,7 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
   opts[:report_dir] ||= 'reports'
   opts[:report_url] ||= 'https://centurio.evva.com/departments/galvanik/reportservice/report/'
   opts[:mail_server] ||= 'http://localhost:9313'
+  opts[:archive_dir] ||= '/srv/Galvanik_Aufbereitung'
 
   interface 'events' do
     run Handler, opts if post 'event'
@@ -272,6 +286,9 @@ Riddl::Server.new('report.xml', :port => 9321) do |opts|
       run GetUuids, opts if get
       on resource 'reports.zip' do
         run GetPdfZip, opts if get
+      end
+      on resource 'archive' do
+        run RunArchive, opts if get
       end
       on resource '[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}' do
         run Delete if delete

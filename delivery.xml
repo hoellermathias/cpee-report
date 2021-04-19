@@ -24,6 +24,9 @@
       <resource relative="reports.zip">
         <get out="report-zip"/>
       </resource>
+      <resource relative="archive">
+        <get/>
+      </resource>
       <resource relative="[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}">
         <delete/>
         <resource relative="report.html">

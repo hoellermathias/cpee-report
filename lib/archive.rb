@@ -4,26 +4,28 @@ require 'rubygems'
 require 'time'
 require 'fileutils'
 
-class Archive
-  def initialize report_dir, report_group
+class ReportArchive
+  def initialize report_dir, report_group, archive_dir=nil
     @report_dir = File.realpath(report_dir)
     @report_group = report_group
     @path = File.join(@report_dir, @report_group)
-    @archive_dir = 'archive'
-    @archive_path = File.join(@path, @archive_dir)
+    @archive_dir = archive_dir || File.join(@report_dir, 'archive')
+    @archive_path = File.join(@archive_dir, @report_group)
+    Dir.mkdir @archive_dir unless Dir.exist? File.join @archive_dir
     Dir.mkdir @archive_path unless Dir.exist? @archive_path
+    p @archive_path
   end
   def run
-    Dir.chdir @path
-    Dir.glob('*').grep(/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/).each do |rdir|
+    Dir.glob("#{@path}/*").grep(Regexp.new("#{@path}/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}")).each do |rdir|
+      info = File.join(rdir, 'report.json')
       html = File.join(rdir, 'report.html')
-      pdf = File.join(rdir, 'report.pdf')
-      csv = File.join(rdir, 'report.csv')
-      time = File.mtime(html)
+      exist_html = File.exists?(html)
+      exist_info = File.exists?(info)
+      time = File.mtime(exist_info && info || (exist_html && html || rdir))
       tstr = time.strftime('%Y-%m-%d_%H:%M')
       m = time.to_date.month
       y = time.to_date.year
-      [html, pdf, csv, json].each{|f| move_file(File.join(@path, f), m, y, tstr)}
+      ['html', 'pdf', 'csv', 'json'].each{|f| move_file(File.join(rdir, "report.#{f}"), m, y, tstr)}
     end
   end
   def move_file file, m, y, tstr
