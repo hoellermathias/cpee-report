@@ -19,6 +19,7 @@
 require 'rubygems'
 require 'json'
 require 'riddl/server'
+require 'riddl/client'
 require 'time'
 require 'pdfkit'
 require 'zip'
@@ -70,13 +71,16 @@ class Handler < Riddl::Implementation #{{{
       return unless (@p[1].value == 'state' && @p[2].value == 'change' && nots.dig('content','state') == 'running' && (nots.dig('content','attributes','report') || nots.dig('content','attributes','report_csv'))) || Dir.glob(File.join(__dir__ ,opts[:report_dir], '*', instance_id)).any?
       begin
         attribute_uri = File.join(nots['instance-url'],'properties','attributes','report')
-        template_uri = Typhoeus.get(attribute_uri, followlocation: true).response_body
+        status, res = Riddl::Client.new(attribute_uri).get
+        template_uri = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         #puts template_uri
       rescue Exception => e
+        puts e.message
         return
       end
       begin
-        template = Typhoeus.get(template_uri, followlocation: true).response_body
+        status, res = Riddl::Client.new(template_uri).get
+        template = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         template.gsub! '%date%', Time.new.tap{|x| str=x.strftime('%d.%m.%Y %H:%M:%S'); day=['Sonntag', 'Montag','Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'][x.strftime('%w').to_i]; break "#{day}, #{str}"}
       rescue Exception => e
         p 'error loading the template: '+e.message
@@ -87,7 +91,9 @@ class Handler < Riddl::Implementation #{{{
       #read init snippet and add it to the report
       init_snippet_uri = nots.dig('content','attributes','report_init_snippet')
       begin
-        init_snippet = Typhoeus.get(init_snippet_uri, followlocation: true).response_body
+        status, res = Riddl::Client.new(init_snippet_uri).get
+        init_snippet = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
+        p init_snippet
         report.add_snippet init_snippet, Event.new
         pp init_snippet
       rescue Exception => e
@@ -97,7 +103,8 @@ class Handler < Riddl::Implementation #{{{
       #read csv template and add it to the report
       csv_uri = nots.dig('content','attributes','report_csv')
       begin
-        csv = Typhoeus.get(csv_uri, followlocation: true).response_body
+        status, res = Riddl::Client.new(csv_uri).get
+        csv = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         report.add_csv csv, Event.new
       rescue Exception => e
         puts 'error loading the csv template: ' + e.full_message
@@ -108,7 +115,8 @@ class Handler < Riddl::Implementation #{{{
     if event.topic == "activity" || event.topic == "dataelements"
       if event.event == "calling" && nots.dig("content" ,"parameters", "report", "url")
         snippet_url = nots.dig("content" ,"parameters", "report", "url")
-        snippet = Typhoeus.get(snippet_url, followlocation: true).response_body
+        status, res = Riddl::Client.new(snippet_url).get
+        snippet = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         report.add_snippet snippet, event
       end
       report.event_done event
@@ -116,13 +124,20 @@ class Handler < Riddl::Implementation #{{{
       report.finalize
       report_path = File.join(__dir__ ,opts[:report_dir], report.group, report.id, 'report.pdf')
       PDFprint.prepare_html_print report_path
+      a = ReportArchive.new opts[:report_dir], report.group, opts['report_archive']&.fetch(report.group)
+      a.run report.id
       @@reports.delete report.id
       begin
         attribute_uri = File.join(nots["instance-url"],'properties','attributes','report_email','/')
-        attribute = Typhoeus.get(attribute_uri, followlocation: true).response_body
+        status, res = Riddl::Client.new(attribute_uri).get
+        attribute = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         unless attribute.empty? then
           a = JSON.parse(attribute)
-          a['text'] = Typhoeus.get(a['text'], followlocation: true).tap{|r| break r.response_code == 200 ? r.response_body : 'Predefinied Email Content not found. \n%link_to_report%'} if a['text'] =~ URI::regexp
+          if a['text'] =~ URI::regexp then
+            status, res = Riddl::Client.new(a['text']).get
+            res = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
+            a['text'] = status == 200 ? res : 'Predefinied Email Content not found. \n%link_to_report%'
+          end
           report.send_email_attachment report_path, a
         end
       rescue Exception => e
@@ -270,11 +285,12 @@ end
 Riddl::Server.new('report.xml', :port => 9321) do |opts|
   accessible_description true
   cross_site_xhr true
+  p opts
 
   opts[:report_dir] ||= 'reports'
   opts[:report_url] ||= 'https://centurio.evva.com/departments/galvanik/reportservice/report/'
   opts[:mail_server] ||= 'http://localhost:9313'
-  opts[:archive_dir] ||= '/srv/Galvanik_Aufbereitung'
+  #opts[:archive_dir] ||= '/srv/Galvanik_Aufbereitung'
 
   interface 'events' do
     run Handler, opts if post 'event'
