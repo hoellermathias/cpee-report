@@ -179,7 +179,7 @@ class Report
     --#{marker}--
     EOS
 
-    b = {to: a['to'], subject: a['subject'], text: ''}
+    b = {to: a['to'], subject: a['subject'].gsub('%link_to_report%', ''), text: ''}
     Typhoeus.post @opts[:mail_server], body: b
   end
 end

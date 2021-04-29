@@ -9,8 +9,8 @@ class ReportArchive
     @report_dir = File.realpath(report_dir)
     @report_group = report_group
     @path = File.join(@report_dir, @report_group)
-    @archive_dir = archive_dir || File.join(@report_dir, 'archive')
-    Dir.mkdir @archive_dir unless Dir.exist? File.join @archive_dir
+    @archive_dir = archive_dir || File.join(@report_dir, 'archive', report_group)
+    FileUtils.mkpath @archive_dir unless Dir.exist? @archive_dir
     p @archive_dir
   end
   def run uuid=nil

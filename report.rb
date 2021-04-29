@@ -124,22 +124,24 @@ class Handler < Riddl::Implementation #{{{
       report.finalize
       report_path = File.join(__dir__ ,opts[:report_dir], report.group, report.id, 'report.pdf')
       PDFprint.prepare_html_print report_path
-      a = ReportArchive.new opts[:report_dir], report.group, opts['report_archive']&.fetch(report.group)
+      a = ReportArchive.new opts[:report_dir], report.group, opts['report_archive']&.dig(report.group)
       a.run report.id
       @@reports.delete report.id
       begin
         attribute_uri = File.join(nots["instance-url"],'properties','attributes','report_email','/')
-        status, res = Riddl::Client.new(attribute_uri).get
-        attribute = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
-        unless attribute.empty? then
-          a = JSON.parse(attribute)
-          if a['text'] =~ URI::regexp then
-            status, res = Riddl::Client.new(a['text']).get
-            res = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
-            a['text'] = status == 200 ? res : 'Predefinied Email Content not found. \n%link_to_report%'
+        begin
+          status, res = Riddl::Client.new(attribute_uri).get
+          attribute = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read if status < 400
+          unless status >= 400 || attribute.empty? then
+            a = JSON.parse(attribute)
+            if a['text'] =~ URI::regexp then
+              status, res = Riddl::Client.new(a['text']).get
+              res = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read if status < 400
+              a['text'] = status == 200 ? res : "Predefinied Email Content not found. \n%link_to_report%"
+            end
+            report.send_email_attachment report_path, a
           end
-          report.send_email_attachment report_path, a
-        end
+        end if attribute_uri
       rescue Exception => e
         puts 'report_email failed ' + e.message + '  ' + e.backtrace.join("\n")
       end
