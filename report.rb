@@ -253,7 +253,7 @@ end
 class RunArchive < Riddl::Implementation
   def response
     opts = @a[0]
-    archive = ReportArchive.new File.join(opts[:basepath], opts[:report_dir]), @r[0], opts[:archive_dir]
+    archive = ReportArchive.new File.join(opts[:basepath], opts[:report_dir]), @r[0], opts['report_archive']&.dig(@r[0])
     archive.run
     @headers << Riddl::Header.new("Location",'..')
     @status = 303
@@ -272,7 +272,7 @@ class GetPdfZip < Riddl::Implementation
         name = "#{ext}/#{date}.#{ext}"
         it = 1
         while file.find_entry name do
-          name = "#{date}_#{it}.#{ext}"
+          name = "#{ext}/#{date}_#{it}.#{ext}"
           it += 1
         end
         file.add(name, x)
