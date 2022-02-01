@@ -132,7 +132,7 @@ Bei jeder Änderung eines Datenelements werden die Annotations (%...%) mit den e
 
 ##### Const Annotation für Schleifen 
 Die `Const` Annotation ermöglicht die dauerhafte Aufzeichung eines Events über die Laufzeit des Prozesses. Dies ist zum Beipiel hilfreich, wenn eine Aktivität in einer Schleife aufgerufen wird und die wiederkehrenden Events der Aktivität in einem einzigen HTMLStück zusammengefasst werden sollen. Somit kann eine Tabelle erzeugt werden, die einen Schleifenduchlauf in jeder Zeile darstellt.  
-**Dazu follgendes Beispiel:**
+**Dazu folgendes Beispiel:**
 Der Prozess besteht aus zwei timeout Aktivitäten (`a1`, `a2`), wobei die zewite Aktivität `a2` in einer Schleife aufgerufen wird. Der Report soll das Label und den Start und Endzeitpunkt von `a1` beinhalten und alle Aufrufe von `a2`, mit Start-, Endzeitpunkt, Schleifenzähler und Label, in einer Tabelle darstellen.  
 ###### Prozessmodel
 ![Prozessmodel](./email_test/img/test_process.png)
