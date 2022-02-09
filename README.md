@@ -3,7 +3,7 @@ Der Report Service ist ein Logger, der den Eventstream der Cpee verarbeitet und 
 
 ## Endpoints 
 Der Service startet auf Port 9321.  
-Follgende Endpoints sind verfügbar:
+Folgende Endpoints sind verfügbar:
 
 
 | Pfad       | Beschreibung                                  |
@@ -27,7 +27,7 @@ Folgendes XML Stück muss eingefügt werden:
 Die url ist die url des Report Service.  
 ```
 <handlers>
-  <handler url="https://centurio.work/customers/evva/report/">
+  <handler url="https://cpee.org/test/report/">
     <events topic='activity'>calling,failed,manipulating,done</events>
     <events topic='dataelements'>change</events>
     <events topic='state'>change</events>
@@ -64,6 +64,8 @@ Folgende Attribute können in der Prozessbeschreibung (testset) für einen Repor
 |`report_csv`|String     |URL der CSV Vorlage für den ganzen Prozesses                |Ja      |
 
 ##### Email report_email
+INFO: Funktioniert nur, wenn der Email-Service gestartet ist.
+
 Ist das Attribut `report_email` definiert wird der Report als PDF im Anhang gesendet. Dem Betreff  (`report_email["subject"]`) wird das Datum und die Uhrzeit, wann das Email versendet wird, angehängt (Beipiel: Freitag, 20.11.2020 06:46:22).  
 Ein Beispiel für das Email Attribut:
 ```
