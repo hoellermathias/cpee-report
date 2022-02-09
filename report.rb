@@ -27,6 +27,10 @@ require_relative 'lib/report'
 require_relative 'lib/event'
 require_relative 'lib/archive'
 
+PDFKit.configure do |config|
+  config.wkhtmltopdf = '/usr/bin/wkhtmltopdf'
+end
+
 module PDFprint
   def PDFprint.prepare_html_print report_path
     tempf = report_path+'.html'

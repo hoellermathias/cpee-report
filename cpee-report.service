@@ -1,15 +1,17 @@
 [Unit]
-Description=Report Server
+Description=CPEE Report Server
 After=network.target
 
 [Service]
 Type=forking
-User=centurio
-WorkingDirectory=/home/centurio/Projects/report
-ExecStart=/home/centurio/Projects/report/report.rb restart
+User=demo
+WorkingDirectory=/home/demo/Projects/cpee-report
+ExecStart=/home/demo/Projects/cpee-report/report.rb start
+ExecReload=/home/demo/Projects/cpee-report/report.rb restart
+ExecStop=/home/demo/Projects/cpee-report/report.rb stop
 TimeoutStopSec=30
 Restart=always
-RestartSec=3
+RestartSec=10
 KillMode=mixed
 
 [Install]

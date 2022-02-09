@@ -1,0 +1,53 @@
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.header {
+ padding: 2px;
+ text-align: center;
+ background: #f7e600;
+ color: black;
+ font-size: 14px;
+}
+html {
+  background: #e8e8e8;
+}
+body {
+  background: white;
+  display: block;
+  margin: auto;
+  box-shadow: 0;
+  width: 21cm;
+}
+div {
+  word-wrap: break-word;
+}
+table, p {
+  margin-left: 1cm;
+}
+h3 {
+  margin-left: 0.3cm;
+}
+:not(body) {
+  padding-left: 0.3cm;
+}
+
+@media print {
+  html {
+    background: #ffffff;
+  }
+  .hidden-print {
+    display: none !important;
+  }
+}
