@@ -65,6 +65,89 @@ class Handler < Riddl::Implementation #{{{
     #     "attributes"=>{"status"=>"model", "uuid"=>"d8454fba-8981-45e9-999a-bf8eb98c2397", "report"=>"https://centurio.work/customers/evva/report/report.html", "creator"=>"Mathias Hoellerer", "author"=>"Mathias Hoellerer", "modeltype"=>"CPEE", "theme"=>"default", "info"=>"test_email_report", "report_email"=>"{\"to\": \"mathias.hoeller@univie.ac.at\", \"subject\": \"test process\", \"text\": \"https://centurio.work/customers/evva/report/email_test/email.html\"}"}
     #    }
     # }
+    #{
+    #"cpee": "https://centurio.evva.com/flow/engine/",
+    #"instance-url": "https://centurio.evva.com/flow/engine/9876",
+    #"instance-uuid": "b15ba7a1-c85d-4dd8-a46b-740fb11a30f5",
+    #"instance-name": "Frames",
+    #"instance": 9876,
+    #"topic": "activity",
+    #"type": "event",
+    #"name": "calling",
+    #"timestamp": "2021-11-10T19:12:25.480+01:00",
+    #"content": {
+    #    "activity-uuid": "25deb0e09941664e7b93b58df5374181",
+    #    "label": "button",
+    #    "activity": "a5",
+    #    "passthrough": null,
+    #    "endpoint": "https-put://centurio.evva.com/out/frames/galvanik",
+    #    "parameters": {
+    #        "label": "button",
+    #        "arguments": [
+    #            {
+    #                "name": "type",
+    #                "value": "wait"
+    #            },
+    #            {
+    #                "name": "lx",
+    #                "value": "0"
+    #            },
+    #            {
+    #                "name": "ly",
+    #                "value": "9"
+    #            },
+    #            {
+    #                "name": "x_amount",
+    #                "value": "10"
+    #            },
+    #            {
+    #                "name": "y_amount",
+    #                "value": "1"
+    #            },
+    #            {
+    #                "name": "button",
+    #                "value": null
+    #            },
+    #            {
+    #                "name": "style",
+    #                "value": null
+    #            },
+    #            {
+    #                "name": "urls",
+    #                "value": "[ { \"lang\": \"de-at\", \"url\": \"https://centurio.evva.com/departments/galvanik/galwass/framesui/cancel_button.html\" } ]"
+    #            },
+    #            {
+    #                "name": "default",
+    #                "value": null
+    #            }
+    #        ]
+    #    },
+    #    "annotations": {
+    #        "_timing": {
+    #            "_timing_weight": null,
+    #            "_timing_avg": null,
+    #            "explanations": null
+    #        },
+    #        "_notes": {
+    #            "_notes_general": null
+    #        },
+    #        "report": {
+    #            "url": null
+    #        }
+    #    },
+    #    "attributes": {
+    #        "author": "Mathias Hoellerer",
+    #        "department": "galvanik",
+    #        "creator": "Florian Pauker",
+    #        "modeltype": "CPEE",
+    #        "design_stage": "production",
+    #        "design_dir": "",
+    #        "theme": "extended",
+    #        "uuid": "b15ba7a1-c85d-4dd8-a46b-740fb11a30f5",
+    #        "info": "Frames"
+    #    }
+    #}
+    #}
     instance_id = nots['instance-uuid']
     report = @@reports[instance_id]
     unless report
@@ -113,8 +196,8 @@ class Handler < Riddl::Implementation #{{{
     return unless report
     event = Event.new @p[1].value, @p[2].value, nots  #report.add_event params
     if event.topic == "activity" || event.topic == "dataelements"
-      if event.event == "calling" && nots.dig("content" ,"parameters", "report", "url")
-        snippet_url = nots.dig("content" ,"parameters", "report", "url")
+      if event.event == "calling" && nots.dig("content" ,"annotations", "report", "url")
+        snippet_url = nots.dig("content" ,"annotations", "report", "url")
         status, res = Riddl::Client.new(snippet_url).get
         snippet = res[0].class == Riddl::Parameter::Simple ? res[0].value :  res[0].value.read
         report.add_snippet snippet, event
